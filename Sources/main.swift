@@ -20,7 +20,8 @@ guard gethostname(&buffer, BUFSIZE) == 0 else {
   exit(-1)
 }
 
-let clientId = String(cString:buffer) + "-reader"
+let hostname = String(cString:buffer)
+let clientId = hostname + "-sub"
 
 let client = Client(clientId:clientId)
 client.host = "broker.hivemq.com"
@@ -44,7 +45,7 @@ _ = nc.addObserverForName("DisconnectedNotification", object:nil, queue:nil){_ i
 
 _ = nc.addObserverForName("ConnectedNotification", object:nil, queue:nil) {_ in
   SLogInfo("Subscribe to topic")
-  _ = client.subscribe(topic:"/darthvader/cpu/temperature/value")
+  _ = client.subscribe(topic:"/\(hostname)/cpu/temperature/value")
 }
 
 _ = nc.addObserverForName("MessageNotification", object:nil, queue:nil){ notification in
