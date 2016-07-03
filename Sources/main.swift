@@ -27,30 +27,30 @@ let client = Client(clientId:clientId)
 client.host = "broker.hivemq.com"
 client.keepAlive = 10
 
-let nc = NSNotificationCenter.defaultCenter()
+let nc = NotificationCenter.defaultCenter()
 
-_ = nc.addObserverForName("DisconnectedNotification", object:nil, queue:nil){_ in
+_ = nc.addObserverForName(DisconnectedNotification.name, object:nil, queue:nil){_ in
   SLogInfo("Connecting to broker")
 
   if !client.connect() {
     SLogError("Unable to connect to broker.hivemq.com, retrying in 30 seconds")
     let retryInterval     = 30
-    let retryTimer        = NSTimer.scheduledTimer(NSTimeInterval(retryInterval),
-                                                   repeats:false){ _ in
-      nc.postNotificationName("DisconnectedNotification", object:nil)
+    let retryTimer        = Timer.scheduledTimer(withTimeInterval:TimeInterval(retryInterval),
+                                                 repeats:false){ _ in
+      nc.postNotification(DisconnectedNotification)
     }
-    NSRunLoop.currentRunLoop().addTimer(retryTimer, forMode:NSDefaultRunLoopMode)
+    RunLoop.current().add(retryTimer, forMode:RunLoopMode.defaultRunLoopMode)
   }
 }
 
-_ = nc.addObserverForName("ConnectedNotification", object:nil, queue:nil) {_ in
+_ = nc.addObserverForName(ConnectedNotification.name, object:nil, queue:nil) {_ in
   SLogInfo("Subscribe to topic")
   _ = client.subscribe(topic:"/\(hostname)/cpu/temperature/value")
 }
 
-_ = nc.addObserverForName("MessageNotification", object:nil, queue:nil){ notification in
+_ = nc.addObserverForName(MessageNotification.name, object:nil, queue:nil){ notification in
   if let userInfo = notification.userInfo,
-     let message  = userInfo["message" as NSString] as? MQTTMessage {
+     let message  = userInfo["message"] as? MQTTMessage {
     if let string   = message.string {
       SLogInfo("Received \(string) for topic \(message.topic)")
     }
@@ -59,10 +59,10 @@ _ = nc.addObserverForName("MessageNotification", object:nil, queue:nil){ notific
   }
 }
 
-nc.postNotificationName("DisconnectedNotification", object:nil) // Kick the connection
+nc.postNotification(DisconnectedNotification) // Kick the connection
 
 
-let heartbeat = NSTimer.scheduledTimer(NSTimeInterval(30), repeats:true){_ in return}
-NSRunLoop.currentRunLoop().addTimer(heartbeat, forMode:NSDefaultRunLoopMode)
-NSRunLoop.currentRunLoop().run()
+let heartbeat = Timer.scheduledTimer(withTimeInterval:TimeInterval(30), repeats:true){_ in return}
+RunLoop.current().add(heartbeat, forMode:RunLoopMode.defaultRunLoopMode)
+RunLoop.current().run()
 

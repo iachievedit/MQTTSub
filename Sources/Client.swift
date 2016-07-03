@@ -17,8 +17,7 @@ class Client:MQTT, MQTTDelegate {
   
   func mqtt(mqtt: MQTT, didConnect host: String, port: Int) {
     SLogInfo("MQTT client has connected to \(host):\(port)")
-    NSNotificationCenter.defaultCenter().postNotificationName("ConnectedNotification",
-                                                              object:nil)
+    NotificationCenter.defaultCenter().postNotification(ConnectedNotification)
   }
   
   func mqtt(mqtt: MQTT, didConnectAck ack: MQTTConnAck) {
@@ -34,10 +33,10 @@ class Client:MQTT, MQTTDelegate {
   }
   
   func mqtt(mqtt: MQTT, didReceiveMessage message: MQTTMessage, id: UInt16 ) {
-    let userInfo:[NSObject:AnyObject] = ["message" as NSString:message]
-    NSNotificationCenter.defaultCenter().postNotificationName("MessageNotification",
-                                                              object:nil,
-                                                              userInfo:userInfo)
+    let userInfo:[String:Any] = ["message":message]
+    NotificationCenter.defaultCenter().postNotificationName(MessageNotification.name,
+                                                            object:nil,
+                                                            userInfo:userInfo)
     
   }
   
@@ -60,6 +59,6 @@ class Client:MQTT, MQTTDelegate {
   func mqttDidDisconnect(mqtt: MQTT, withError err: NSError?) {
     ENTRY_LOG()
     SLogInfo("Disconnected from broker")
-    NSNotificationCenter.defaultCenter().postNotificationName("DisconnectedNotification",object:nil)
+    NotificationCenter.defaultCenter().postNotification(DisconnectedNotification)
   }
 }
